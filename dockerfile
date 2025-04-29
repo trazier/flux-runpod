@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir runpod==1.5.0 && \
     pip install --no-cache-dir safetensors==0.4.2 && \
     pip install --no-cache-dir pillow==10.2.0 && \
     pip install --no-cache-dir transformers==4.37.2 && \
-    pip install --no-cache-dir diffusers==0.26.3
+    pip install --no-cache-dir diffusers==0.30.0
 
 # Copy handler script
 COPY handler.py /app/handler.py
