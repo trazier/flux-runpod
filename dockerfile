@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies
 RUN pip install --no-cache-dir \
+    huggingface_hub==0.20.2 \
     diffusers==0.26.3 \
     transformers==4.37.2 \
     accelerate==0.27.2 \
