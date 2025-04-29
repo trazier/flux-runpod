@@ -14,15 +14,15 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-RUN pip install --no-cache-dir \
-    huggingface_hub==0.20.2 \
-    diffusers==0.26.3 \
-    transformers==4.37.2 \
-    accelerate==0.27.2 \
-    runpod==1.5.0 \
-    pillow==10.2.0 \
-    safetensors==0.4.2
+# Install Python dependencies in specific order to manage compatibility
+RUN pip install --no-cache-dir runpod==1.5.0 && \
+    pip install --no-cache-dir huggingface_hub==0.20.2 && \
+    pip install --no-cache-dir torch==2.1.0 && \
+    pip install --no-cache-dir accelerate==0.27.2 && \
+    pip install --no-cache-dir safetensors==0.4.2 && \
+    pip install --no-cache-dir pillow==10.2.0 && \
+    pip install --no-cache-dir transformers==4.37.2 && \
+    pip install --no-cache-dir diffusers==0.26.3
 
 # Copy handler script
 COPY handler.py /app/handler.py
