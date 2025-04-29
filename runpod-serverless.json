@@ -1,0 +1,23 @@
+{
+  "name": "flux1-dev-image-generator",
+  "description": "FLUX.1 [dev] image generation API on RunPod Serverless",
+  "version": "1.0.0",
+  "template": {
+    "handler": "/app/handler.py",
+    "container": {
+      "gpu": 1,
+      "volumes": {
+        "/cache": {
+          "size": "20GB"
+        }
+      },
+      "resources": {
+        "memory": "16GB",
+        "gpu": "24GB"
+      }
+    }
+  },
+  "runtimes": ["runpod/base:0.4.0-cuda12.1.0"],
+  "readme": "# FLUX.1 [dev] Image Generator\n\nThis serverless API uses the FLUX.1 [dev] model from Black Forest Labs to generate images from text prompts.\n\n## API Usage\n\n```json\n{\n  \"input\": {\n    \"prompt\": \"A cat holding a sign that says hello world\",\n    \"height\": 1024,\n    \"width\": 1024,\n    \"guidance_scale\": 3.5,\n    \"num_inference_steps\": 50,\n    \"max_sequence_length\": 512,\n    \"seed\": null\n  }\n}\n```\n\n## Response Format\n\n```json\n{\n  \"image_base64\": \"base64_encoded_image_data\",\n  \"generation_time\": 10.5,\n  \"model_id\": \"black-forest-labs/FLUX.1-dev\",\n  \"parameters\": {\n    \"prompt\": \"A cat holding a sign that says hello world\",\n    \"height\": 1024,\n    \"width\": 1024,\n    \"guidance_scale\": 3.5,\n    \"num_inference_steps\": 50,\n    \"max_sequence_length\": 512,\n    \"seed\": 42\n  },\n  \"license\": \"FLUX.1 [dev] Non-Commercial License - outputs can be used for personal, scientific, and commercial purposes\"\n}\n```\n\n## Required Hardware\n\nThis model requires a GPU with at least 24GB of VRAM (recommended: NVIDIA RTX A5000, A6000, or better).\n"
+  }
+}
