@@ -1,7 +1,29 @@
 import runpod
-from diffusers import FluxPipeline  # Just add the import, don't initialize
+import sys
 
 def handler(event):
-    return {"status": "success", "message": "Import successful"}
+    # Check for availability of required libraries
+    libraries = {
+        "diffusers": False,
+        "torch": False
+    }
+    
+    try:
+        import diffusers
+        libraries["diffusers"] = True
+    except ImportError as e:
+        libraries["diffusers"] = str(e)
+        
+    try:
+        import torch
+        libraries["torch"] = True
+    except ImportError as e:
+        libraries["torch"] = str(e)
+    
+    return {
+        "status": "Library check completed",
+        "libraries": libraries,
+        "python_version": sys.version
+    }
 
 runpod.serverless.start({"handler": handler})
