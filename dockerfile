@@ -16,13 +16,14 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies in specific order to manage compatibility
 RUN pip install --no-cache-dir runpod==1.5.0 && \
-    pip install --no-cache-dir huggingface_hub==0.20.2 && \
+    pip install --no-cache-dir huggingface_hub==0.15.1 && \
+    pip install --no-cache-dir tokenizers==0.13.3 && \
+    pip install --no-cache-dir safetensors==0.4.2 && \
     pip install --no-cache-dir torch==2.1.0 && \
     pip install --no-cache-dir accelerate==0.27.2 && \
-    pip install --no-cache-dir safetensors==0.4.2 && \
     pip install --no-cache-dir pillow==10.2.0 && \
-    pip install --no-cache-dir transformers==4.37.2 && \
-    pip install --no-cache-dir diffusers==0.30.0
+    pip install --no-cache-dir transformers==4.26.0 && \
+    pip install --no-cache-dir diffusers==0.18.0
 
 # Copy handler script
 COPY handler.py /app/handler.py
