@@ -1,129 +1,66 @@
 import os
-import time
-import json
-import torch
 import runpod
-from diffusers import FluxPipeline
-
-# Initialize model globally for reuse across requests
-def initialize_model():
-    model_id = os.environ.get("MODEL_ID", "black-forest-labs/FLUX.1-dev")
-    
-    print(f"Loading model: {model_id}")
-    pipe = FluxPipeline.from_pretrained(
-        model_id,
-        torch_dtype=torch.bfloat16
-    )
-    
-    # Enable model CPU offload to save VRAM if needed
-    # Comment this out if you have sufficient GPU memory
-    pipe.enable_model_cpu_offload()
-    
-    return pipe
-
-# Initialize the model on startup
-pipe = initialize_model()
-
-def generate_image(prompt, height=1024, width=1024, guidance_scale=3.5, 
-                  num_inference_steps=50, max_sequence_length=512, seed=None):
-    """Generate an image based on text prompt using the loaded model"""
-    
-    # Set seed for reproducibility if provided
-    generator = None
-    if seed is not None:
-        generator = torch.Generator("cpu").manual_seed(seed)
-    
-    # Record start time for performance tracking
-    start_time = time.time()
-    
-    # Generate the image
-    output = pipe(
-        prompt,
-        height=height,
-        width=width,
-        guidance_scale=guidance_scale,
-        num_inference_steps=num_inference_steps,
-        max_sequence_length=max_sequence_length,
-        generator=generator
-    )
-    
-    # Calculate time taken
-    generation_time = time.time() - start_time
-    
-    # Convert image to base64 for API response
-    import base64
-    from io import BytesIO
-    
-    image = output.images[0]
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    
-    return {
-        "image_base64": image_base64,
-        "generation_time": generation_time,
-        "model_id": os.environ.get("MODEL_ID", "black-forest-labs/FLUX.1-dev"),
-        "parameters": {
-            "prompt": prompt,
-            "height": height,
-            "width": width,
-            "guidance_scale": guidance_scale,
-            "num_inference_steps": num_inference_steps,
-            "max_sequence_length": max_sequence_length,
-            "seed": seed
-        },
-        "license": "FLUX.1 [dev] Non-Commercial License - outputs can be used for personal, scientific, and commercial purposes"
-    }
+import torch
+import shutil
 
 def handler(event):
     """
-    Handler function that processes the incoming API request for image generation.
-    Expected input format:
-    {
-        "prompt": "Your text prompt here",
-        "height": 1024,               # optional, defaults to 1024
-        "width": 1024,                # optional, defaults to 1024
-        "guidance_scale": 3.5,        # optional, defaults to 3.5
-        "num_inference_steps": 50,    # optional, defaults to 50
-        "max_sequence_length": 512,   # optional, defaults to 512
-        "seed": null                  # optional, random seed if not provided
-    }
+    Simple handler function for diagnosis without trying to use the FluxPipeline.
     """
     try:
-        # Extract input data
-        input_data = event["input"]
-        prompt = input_data.get("prompt")
+        # Check disk space
+        disk_info = {}
+        for path in ["/", "/tmp", "/app", "/cache"]:
+            try:
+                if os.path.exists(path):
+                    total, used, free = shutil.disk_usage(path)
+                    disk_info[path] = {
+                        "total_gb": round(total / (1024**3), 2),
+                        "used_gb": round(used / (1024**3), 2),
+                        "free_gb": round(free / (1024**3), 2)
+                    }
+            except Exception as e:
+                disk_info[path] = f"Error checking: {str(e)}"
         
-        if not prompt:
-            return {
-                "error": "No prompt provided in the request"
-            }
+        # Get input parameters
+        input_data = event.get("input", {})
+        prompt = input_data.get("prompt", "A cat holding a sign that says hello world")
+        
+        # Try to import diffusers just to test if it works
+        import_info = {}
+        try:
+            import diffusers
+            import_info["diffusers"] = f"Successfully imported version {diffusers.__version__}"
+        except Exception as e:
+            import_info["diffusers"] = f"Error: {str(e)}"
             
-        # Get optional parameters
-        height = input_data.get("height", 1024)
-        width = input_data.get("width", 1024)
-        guidance_scale = input_data.get("guidance_scale", 3.5)
-        num_inference_steps = input_data.get("num_inference_steps", 50)
-        max_sequence_length = input_data.get("max_sequence_length", 512)
-        seed = input_data.get("seed")
-        
-        # Generate the image
-        result = generate_image(
-            prompt=prompt,
-            height=height,
-            width=width,
-            guidance_scale=guidance_scale,
-            num_inference_steps=num_inference_steps,
-            max_sequence_length=max_sequence_length,
-            seed=seed
-        )
-        
-        return result
+        try:
+            import huggingface_hub
+            import_info["huggingface_hub"] = f"Successfully imported version {huggingface_hub.__version__}"
+        except Exception as e:
+            import_info["huggingface_hub"] = f"Error: {str(e)}"
+            
+        try:
+            import transformers
+            import_info["transformers"] = f"Successfully imported version {transformers.__version__}"
+        except Exception as e:
+            import_info["transformers"] = f"Error: {str(e)}"
+            
+        # Return diagnostic info
+        return {
+            "status": "success",
+            "message": "Handler executed without trying to load model yet",
+            "disk_info": disk_info,
+            "import_info": import_info,
+            "prompt": prompt
+        }
         
     except Exception as e:
-        # Return error message if anything goes wrong
+        # Return detailed error for debugging
         return {
-            "error": str(e)
+            "status": "error",
+            "error": str(e),
+            "disk_info": disk_info if 'disk_info' in locals() else "Not available"
         }
 
 # Start the serverless function
