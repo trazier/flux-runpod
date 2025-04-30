@@ -8,12 +8,13 @@
       "gpu": 1,
       "volumes": {
         "/cache": {
-          "size": "20GB"
+          "size": "50GB"
         }
       },
       "resources": {
         "memory": "16GB",
-        "gpu": "24GB"
+        "gpu": "24GB",
+        "disk": "50GB"
       }
     }
   },
